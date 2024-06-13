@@ -1,18 +1,18 @@
 <script setup lang="ts">
 const { data: images, refresh } = await useFetch("/api/images");
 
-async function uploadImage({ target }: Event) {
+async function uploadImage(e: Event) {
   // https://hub.nuxt.com/docs/storage/blob#useupload
   const upload = useUpload("/api/images/upload", {
     multiple: false,
   });
-  await upload([...target.files])
+  const form = e.target as HTMLFormElement;
+  await upload([...form.image.files])
     .then(async () => {
+      form.reset();
       await refresh();
     })
-    .catch((err) => {
-      alert("Failed to upload image:\n" + { err: err.message });
-    });
+    .catch((err) => alert("Failed to upload image:\n" + err.data?.message));
 }
 
 async function deleteImage(pathname: string) {
@@ -24,13 +24,13 @@ async function deleteImage(pathname: string) {
 <template>
   <div>
     <h3>Images</h3>
-    <input
-      accept="jpeg, png"
-      type="file"
-      name="file"
-      multiple="false"
-      @change="uploadImage"
-    />
+    <form @submit.prevent="uploadImage">
+      <label
+        >Upload an image:
+        <input type="file" name="image" accept="image/jpg,image/png"
+      /></label>
+      <button type="submit">Upload</button>
+    </form>
     <p>
       <img
         v-for="image of images"
